@@ -113,10 +113,9 @@
             <ul>
                 <li><strong>WASD</strong> - Move forward, backward, left, right</li>
                 <li><strong>Space</strong> - Jump (can jump over walls)</li>
-                <li><strong>Arrow Keys</strong> - Look around / Rotate camera</li>
-                <li><strong>Mouse</strong> - Look around</li>
+                <li><strong>Mouse</strong> - Look around (First-person camera)</li>
                 <li><strong>Goal:</strong> Collect all food items (🍎) in the maze</li>
-                <li><strong>Tip:</strong> You can jump over walls to take shortcuts!</li>
+                <li><strong>Tip:</strong> Use the moon and stars for navigation in the dark!</li>
             </ul>
             <button onclick="startGame()">Start Game</button>
         </div>
@@ -163,10 +162,10 @@
 
         // Initialize game
         function init() {
-            // Scene setup
+            // Scene setup - Fully dark night
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a1a);
-            scene.fog = new THREE.FogExp2(0x0a0a1a, 0.05);
+            scene.background = new THREE.Color(0x000000); // Pure black background
+            scene.fog = new THREE.FogExp2(0x000000, 0.08); // Subtle black fog
 
             // Camera setup
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -184,7 +183,7 @@
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
+            renderer.toneMappingExposure = 0.6; // Lower exposure for darker scene
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             document.getElementById('gameContainer').appendChild(renderer.domElement);
 
@@ -195,102 +194,93 @@
             
             const bloomPass = new UnrealBloomPass(
                 new THREE.Vector2(window.innerWidth, window.innerHeight),
-                1.5, // strength
-                0.4, // radius
-                0.85 // threshold
+                0.8, // Reduced strength for subtlety
+                0.3, // radius
+                0.9 // threshold - only very bright things bloom
             );
             composer.addPass(bloomPass);
             
             const outputPass = new OutputPass();
             composer.addPass(outputPass);
 
-            // Controls
+            // First-person camera controls
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
-            controls.maxPolarAngle = Math.PI / 2.2;
-            controls.minDistance = 3;
-            controls.maxDistance = 15;
+            controls.target.copy(player.position);
+            controls.maxPolarAngle = Math.PI / 2; // Prevent going below ground
+            controls.minPolarAngle = Math.PI / 2; // Lock to horizontal view
+            controls.enableZoom = false; // Disable zoom for first-person
+            controls.enablePan = false; // Disable pan for first-person
+            controls.mouseButtons = {
+                LEFT: THREE.MOUSE.ROTATE,
+                MIDDLE: null,
+                RIGHT: null
+            };
 
-            // Enhanced night lighting
-            const ambientLight = new THREE.AmbientLight(0x1a1a2e, 0.4);
+            // Minimal night lighting - very dark with subtle moonlight only
+            const ambientLight = new THREE.AmbientLight(0x000000, 0.1); // Almost no ambient
             scene.add(ambientLight);
 
-            // Main moonlight with better shadows
-            const moonLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            // Main moonlight - very subtle
+            const moonLight = new THREE.DirectionalLight(0xffffff, 0.4); // Reduced intensity
             moonLight.position.set(50, 100, 50);
             moonLight.castShadow = true;
             moonLight.shadow.camera.left = -150;
             moonLight.shadow.camera.right = 150;
             moonLight.shadow.camera.top = 150;
             moonLight.shadow.camera.bottom = -150;
-            moonLight.shadow.mapSize.width = 4096;
-            moonLight.shadow.mapSize.height = 4096;
+            moonLight.shadow.mapSize.width = 2048;
+            moonLight.shadow.mapSize.height = 2048;
             moonLight.shadow.bias = -0.0001;
             moonLight.shadow.normalBias = 0.02;
             scene.add(moonLight);
 
-            // Additional fill lights for depth
-            const fillLight1 = new THREE.DirectionalLight(0x4a90e2, 0.3);
-            fillLight1.position.set(-30, 50, -30);
-            scene.add(fillLight1);
-
-            const fillLight2 = new THREE.PointLight(0xffd700, 0.5, 100);
-            fillLight2.position.set(0, 10, 0);
-            scene.add(fillLight2);
-
-            // Rim lights for dramatic effect
-            const rimLight = new THREE.DirectionalLight(0x6a9ae2, 0.4);
-            rimLight.position.set(-50, 30, 50);
-            scene.add(rimLight);
-
-            // Enhanced moon with glow
-            const moonGeometry = new THREE.SphereGeometry(12, 64, 64);
+            // Enhanced moon with glow - more visible
+            const moonGeometry = new THREE.SphereGeometry(15, 64, 64);
             const moonTexture = createMoonTexture();
             const moonMaterial = new THREE.MeshStandardMaterial({ 
                 map: moonTexture,
                 emissive: 0xffffff,
-                emissiveIntensity: 0.6,
+                emissiveIntensity: 1.2, // Brighter moon
                 metalness: 0.1,
                 roughness: 0.9
             });
             const moon = new THREE.Mesh(moonGeometry, moonMaterial);
-            moon.position.set(50, 80, 50);
+            moon.position.set(50, 100, 50);
             scene.add(moon);
 
-            // Moon glow effect
-            const moonGlowGeometry = new THREE.SphereGeometry(15, 32, 32);
+            // Moon glow effect - more visible
+            const moonGlowGeometry = new THREE.SphereGeometry(20, 32, 32);
             const moonGlowMaterial = new THREE.MeshBasicMaterial({ 
                 color: 0xffffff,
                 transparent: true,
-                opacity: 0.2
+                opacity: 0.4 // More visible glow
             });
             const moonGlow = new THREE.Mesh(moonGlowGeometry, moonGlowMaterial);
             moonGlow.position.copy(moon.position);
             scene.add(moonGlow);
 
-            // Enhanced stars with twinkling
+            // Enhanced stars with twinkling - more visible in dark
             const starsGeometry = new THREE.BufferGeometry();
             const starsMaterial = new THREE.PointsMaterial({ 
                 color: 0xffffff, 
-                size: 1.2,
-                sizeAttenuation: true,
+                size: 2.0, // Larger stars for visibility
+                sizeAttenuation: false, // Constant size
                 transparent: true,
-                opacity: 0.9
+                opacity: 1.0 // Fully visible
             });
             const starsVertices = [];
             const starsColors = [];
-            const starsSizes = [];
-            for (let i = 0; i < 8000; i++) {
-                const x = (Math.random() - 0.5) * 1500;
-                const y = Math.random() * 600 + 50;
-                const z = (Math.random() - 0.5) * 1500;
+            for (let i = 0; i < 10000; i++) {
+                const x = (Math.random() - 0.5) * 2000;
+                const y = Math.random() * 800 + 50;
+                const z = (Math.random() - 0.5) * 2000;
                 starsVertices.push(x, y, z);
                 
-                // Varying star colors
-                const brightness = 0.5 + Math.random() * 0.5;
+                // Varying star brightness - some brighter for visibility
+                const brightness = 0.3 + Math.random() * 0.7;
                 starsColors.push(brightness, brightness, brightness);
-                starsSizes.push(0.3 + Math.random() * 1.5);
             }
             starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
             starsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starsColors, 3));
@@ -301,66 +291,34 @@
             // Particle system for atmosphere
             createParticleSystem();
 
-            // Enhanced ground with texture
+            // Dark ground
             const groundGeometry = new THREE.PlaneGeometry(1000, 1000, 50, 50);
             groundGeometry.rotateX(-Math.PI / 2);
             
-            // Create procedural ground texture
+            // Create procedural ground texture - very dark
             const groundTexture = createGroundTexture();
             const groundMaterial = new THREE.MeshStandardMaterial({ 
                 map: groundTexture,
-                color: 0x1a1a2e,
-                metalness: 0.1,
-                roughness: 0.9,
-                normalScale: new THREE.Vector2(2, 2)
+                color: 0x050510, // Very dark ground
+                metalness: 0.0,
+                roughness: 1.0
             });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.position.y = 0;
             ground.receiveShadow = true;
             scene.add(ground);
 
-            // Enhanced player model
-            const playerGroup = new THREE.Group();
-            
-            // Body
-            const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1.2, 32);
-            const bodyMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x4a90e2, 
-                emissive: 0x1a3a5a, 
-                emissiveIntensity: 0.8,
-                metalness: 0.3,
-                roughness: 0.4
+            // Player - invisible in first-person (just for physics)
+            const playerGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1.5, 16);
+            const playerMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2a4a6a, 
+                emissive: 0x0a1a2a, 
+                emissiveIntensity: 0.3,
+                visible: false // Invisible in first-person
             });
-            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-            body.position.y = 0.6;
-            body.castShadow = true;
-            playerGroup.add(body);
-            
-            // Head
-            const headGeometry = new THREE.SphereGeometry(0.4, 32, 32);
-            const headMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x5aa0f2,
-                emissive: 0x2a4a6a,
-                emissiveIntensity: 0.6
-            });
-            const head = new THREE.Mesh(headGeometry, headMaterial);
-            head.position.y = 1.6;
-            head.castShadow = true;
-            playerGroup.add(head);
-            
-            // Glow effect
-            const playerGlowGeometry = new THREE.SphereGeometry(0.6, 32, 32);
-            const playerGlowMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0x4a90e2,
-                transparent: true,
-                opacity: 0.3
-            });
-            const glow = new THREE.Mesh(playerGlowGeometry, playerGlowMaterial);
-            glow.position.copy(head.position);
-            playerGroup.add(glow);
-            
-            player = playerGroup;
+            player = new THREE.Mesh(playerGeometry, playerMaterial);
             player.position.set(0, 1, 0);
+            player.castShadow = false; // No shadow for invisible player
             scene.add(player);
 
             // Generate random maze
@@ -443,14 +401,14 @@
                 
                 player.position.y += velocity.y * 0.016;
                 
-                // Keep camera near player
-                const idealOffset = new THREE.Vector3(0, 3, 5);
-                idealOffset.applyQuaternion(camera.quaternion);
-                const idealPosition = player.position.clone().add(idealOffset);
-                camera.position.lerp(idealPosition, 0.1);
+                // First-person camera - attached to player's head
+                camera.position.x = player.position.x;
+                camera.position.y = player.position.y + 1.6; // Eye level
+                camera.position.z = player.position.z;
                 
-                // Update controls
-                controls.target.copy(player.position);
+                // Update controls - first person view rotates camera
+                controls.target.copy(camera.position);
+                controls.target.add(new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion));
                 controls.update();
                 
                 // Check food collection
@@ -509,11 +467,11 @@
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
             
-            // Create stone-like texture
+            // Create very dark stone-like texture
             const gradient = ctx.createLinearGradient(0, 0, 256, 256);
-            gradient.addColorStop(0, '#2a2a3e');
-            gradient.addColorStop(0.5, '#1a1a2e');
-            gradient.addColorStop(1, '#3a3a4e');
+            gradient.addColorStop(0, '#0a0a15');
+            gradient.addColorStop(0.5, '#050510');
+            gradient.addColorStop(1, '#0f0f1a');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 256, 256);
             
@@ -541,9 +499,9 @@
             const ctx = canvas.getContext('2d');
             
             const gradient = ctx.createLinearGradient(0, 0, 512, 512);
-            gradient.addColorStop(0, '#1a1a2e');
-            gradient.addColorStop(0.5, '#0a0a1e');
-            gradient.addColorStop(1, '#2a2a3e');
+            gradient.addColorStop(0, '#050510');
+            gradient.addColorStop(0.5, '#000005');
+            gradient.addColorStop(1, '#0a0a10');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 512, 512);
             
@@ -694,13 +652,13 @@
             maze[1][0] = 0;
             maze[mazeSize - 2][mazeSize - 1] = 0;
 
-            // Build 3D walls with enhanced materials
+            // Build 3D walls - very dark
             const wallTexture = createWallTexture();
             const wallMaterial = new THREE.MeshStandardMaterial({ 
                 map: wallTexture,
-                color: 0x2a2a3e,
-                metalness: 0.4,
-                roughness: 0.6,
+                color: 0x0a0a15, // Much darker walls
+                metalness: 0.2,
+                roughness: 0.8,
                 normalScale: new THREE.Vector2(1, 1)
             });
 
@@ -768,18 +726,18 @@
                         food.userData = { collected: false, rotationSpeed: 0.02 + Math.random() * 0.02 };
                         foodGroup.add(food);
                         
-                        // Glow effect
+                        // Glow effect - brighter in dark
                         const glowGeometry = new THREE.SphereGeometry(0.5, 16, 16);
                         const glowMaterial = new THREE.MeshBasicMaterial({ 
                             color: 0xff0000,
                             transparent: true,
-                            opacity: 0.3
+                            opacity: 0.5 // More visible in dark
                         });
                         const glow = new THREE.Mesh(glowGeometry, glowMaterial);
                         foodGroup.add(glow);
                         
-                        // Point light for illumination
-                        const foodLight = new THREE.PointLight(0xff4444, 1, 5);
+                        // Point light for illumination - brighter in dark
+                        const foodLight = new THREE.PointLight(0xff4444, 3, 10); // Brighter and wider range
                         foodGroup.add(foodLight);
                         
                         foodGroup.position.set(
