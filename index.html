@@ -162,14 +162,14 @@
 
         // Initialize game
         function init() {
-            // Scene setup - Dark night with some visibility
+            // Scene setup - Dark night with visibility
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x000010); // Very dark blue background
-            scene.fog = new THREE.FogExp2(0x000010, 0.03); // Very subtle fog
+            scene.background = new THREE.Color(0x0a0a1a); // Dark blue background
+            scene.fog = new THREE.FogExp2(0x0a0a1a, 0.02); // Very subtle fog
 
-            // Camera setup
+            // Camera setup - initial position
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 5, 0);
+            camera.position.set(0, 1.6, 0); // Start at eye level
 
             // Renderer setup with maximum quality
             renderer = new THREE.WebGLRenderer({ 
@@ -219,11 +219,11 @@
             };
 
             // Night lighting - dark but visible
-            const ambientLight = new THREE.AmbientLight(0x1a1a2e, 0.2); // Low ambient for visibility
+            const ambientLight = new THREE.AmbientLight(0x2a2a3e, 0.35); // Higher ambient for visibility
             scene.add(ambientLight);
 
             // Main moonlight - enough to see
-            const moonLight = new THREE.DirectionalLight(0xffffff, 0.8); // Visible moonlight
+            const moonLight = new THREE.DirectionalLight(0xffffff, 1.0); // Bright moonlight
             moonLight.position.set(50, 100, 50);
             moonLight.castShadow = true;
             moonLight.shadow.camera.left = -150;
@@ -299,7 +299,7 @@
             const groundTexture = createGroundTexture();
             const groundMaterial = new THREE.MeshStandardMaterial({ 
                 map: groundTexture,
-                color: 0x0a0a1a, // Dark but visible ground
+                color: 0x1a1a2e, // More visible ground
                 metalness: 0.0,
                 roughness: 1.0
             });
@@ -406,12 +406,10 @@
                 camera.position.y = player.position.y + 1.6; // Eye level
                 camera.position.z = player.position.z;
                 
-                // Update controls - first person view
-                controls.target.set(
-                    player.position.x,
-                    player.position.y + 1.6,
-                    player.position.z
-                );
+                // Update controls - first person view (look direction)
+                const forward = new THREE.Vector3(0, 0, -1);
+                forward.applyQuaternion(camera.quaternion);
+                controls.target.copy(camera.position).add(forward);
                 controls.update();
                 
                 // Check food collection
@@ -470,11 +468,11 @@
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
             
-            // Create dark stone-like texture - visible
+            // Create dark stone-like texture - clearly visible
             const gradient = ctx.createLinearGradient(0, 0, 256, 256);
-            gradient.addColorStop(0, '#1a1a2e');
-            gradient.addColorStop(0.5, '#0f0f1f');
-            gradient.addColorStop(1, '#25253f');
+            gradient.addColorStop(0, '#2a2a3e');
+            gradient.addColorStop(0.5, '#1a1a2e');
+            gradient.addColorStop(1, '#3a3a4e');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 256, 256);
             
@@ -502,9 +500,9 @@
             const ctx = canvas.getContext('2d');
             
             const gradient = ctx.createLinearGradient(0, 0, 512, 512);
-            gradient.addColorStop(0, '#0a0a1a');
-            gradient.addColorStop(0.5, '#050510');
-            gradient.addColorStop(1, '#0f0f1f');
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(0.5, '#0a0a1a');
+            gradient.addColorStop(1, '#2a2a3e');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 512, 512);
             
@@ -613,9 +611,9 @@
 
             // Recursive backtracking algorithm
             const stack = [];
-            const startX = 1;
-            const startZ = 1;
-            maze[startZ][startX] = 0;
+            const mazeStartX = 1;
+            const mazeStartZ = 1;
+            maze[mazeStartZ][mazeStartX] = 0;
 
             const directions = [[0, -2], [2, 0], [0, 2], [-2, 0]];
             
@@ -627,7 +625,7 @@
                 return array;
             }
 
-            stack.push([startX, startZ]);
+            stack.push([mazeStartX, mazeStartZ]);
 
             while (stack.length > 0) {
                 const [x, z] = stack[stack.length - 1];
@@ -655,11 +653,11 @@
             maze[1][0] = 0;
             maze[mazeSize - 2][mazeSize - 1] = 0;
 
-            // Build 3D walls - dark but visible
+            // Build 3D walls - dark but clearly visible
             const wallTexture = createWallTexture();
             const wallMaterial = new THREE.MeshStandardMaterial({ 
                 map: wallTexture,
-                color: 0x1a1a2e, // Dark but visible walls
+                color: 0x2a2a3e, // More visible walls
                 metalness: 0.2,
                 roughness: 0.8,
                 normalScale: new THREE.Vector2(1, 1)
@@ -695,12 +693,14 @@
                 }
             }
 
-            // Place player at entrance
-            player.position.set(
-                -mazeSize * cellSize / 2 + cellSize,
-                1,
-                -mazeSize * cellSize / 2 + cellSize
-            );
+            // Place player at entrance - ensure visible start
+            const startX = -mazeSize * cellSize / 2 + cellSize;
+            const startZ = -mazeSize * cellSize / 2 + cellSize;
+            player.position.set(startX, 1, startZ);
+            
+            // Initialize camera at player position
+            camera.position.set(startX, 1.6, startZ);
+            controls.target.set(startX, 1.6, startZ + 1); // Look forward initially
         }
 
         function placeFood() {
@@ -855,11 +855,11 @@
             document.getElementById('foodCount').textContent = '0';
             
             // Reset player
-            player.position.set(
-                -mazeSize * cellSize / 2 + cellSize,
-                1,
-                -mazeSize * cellSize / 2 + cellSize
-            );
+            const resetX = -mazeSize * cellSize / 2 + cellSize;
+            const resetZ = -mazeSize * cellSize / 2 + cellSize;
+            player.position.set(resetX, 1, resetZ);
+            camera.position.set(resetX, 1.6, resetZ);
+            controls.target.set(resetX, 1.6, resetZ + 1);
             velocity.set(0, 0, 0);
         }
 

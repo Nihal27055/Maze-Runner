@@ -43,6 +43,8 @@ A thrilling 3D maze game set in the darkness of night. Navigate through a proced
 
 ### Version 1: JavaScript/HTML (Recommended - Best Graphics)
 
+**Play Online:** 🎮 **[Play the game directly in your browser!](https://nihal27055.github.io/Maze-Runner/)**
+
 **Prerequisites:**
 - Modern web browser (Chrome, Firefox, Edge, Safari)
 - Internet connection (for loading Three.js library from CDN)
@@ -52,6 +54,8 @@ A thrilling 3D maze game set in the darkness of night. Navigate through a proced
 2. Open `index.html` in your web browser
 3. Click "Start Game" on the instructions screen
 4. Enjoy the game with maximum graphics quality!
+
+**Or play directly:** Visit [https://nihal27055.github.io/Maze-Runner/](https://nihal27055.github.io/Maze-Runner/)
 
 **Features:**
 - ✅ Post-processing effects (Bloom, Tone Mapping)
