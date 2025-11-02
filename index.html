@@ -108,14 +108,14 @@
 <body>
     <div id="gameContainer">
         <div id="instructions">
-            <h1>🌙 3D Maze Runner - Night Edition</h1>
+            <h1>☀️ 3D Maze Runner - Morning Edition</h1>
             <h2>How to Play:</h2>
             <ul>
                 <li><strong>WASD</strong> - Move forward, backward, left, right</li>
                 <li><strong>Space</strong> - Jump (can jump over walls)</li>
                 <li><strong>Mouse</strong> - Look around (First-person camera)</li>
                 <li><strong>Goal:</strong> Collect all food items (🍎) in the maze</li>
-                <li><strong>Tip:</strong> Use the moon and stars for navigation in the dark!</li>
+                <li><strong>Tip:</strong> Enjoy the beautiful morning atmosphere and explore the maze!</li>
             </ul>
             <button onclick="startGame()">Start Game</button>
         </div>
@@ -162,10 +162,10 @@
 
         // Initialize game
         function init() {
-            // Scene setup - Dark night with visibility
+            // Scene setup - Beautiful Morning with Ultra Graphics
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a1a); // Dark blue background
-            scene.fog = new THREE.FogExp2(0x0a0a1a, 0.02); // Very subtle fog
+            scene.background = new THREE.Color(0x87CEEB); // Sky blue background (morning sky)
+            scene.fog = new THREE.FogExp2(0x87CEEB, 0.001); // Very light fog for atmosphere
 
             // Camera setup - initial position
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -183,8 +183,9 @@
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.0; // Balanced exposure
+            renderer.toneMappingExposure = 1.5; // Bright morning exposure
             renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.physicallyCorrectLights = true; // Ultra graphics setting
             document.getElementById('gameContainer').appendChild(renderer.domElement);
 
             // Post-processing effects (commented out initially to debug)
@@ -193,12 +194,12 @@
                 const renderPass = new RenderPass(scene, camera);
                 composer.addPass(renderPass);
                 
-                const bloomPass = new UnrealBloomPass(
-                    new THREE.Vector2(window.innerWidth, window.innerHeight),
-                    0.8, // Reduced strength for subtlety
-                    0.3, // radius
-                    0.9 // threshold - only very bright things bloom
-                );
+            const bloomPass = new UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                1.2, // Enhanced bloom for ultra graphics
+                0.5, // radius
+                0.6 // threshold - more bloom effects
+            );
                 composer.addPass(bloomPass);
                 
                 const outputPass = new OutputPass();
@@ -224,90 +225,78 @@
             };
             controls.update(); // Update immediately
 
-            // Night lighting - dark but visible
-            const ambientLight = new THREE.AmbientLight(0x2a2a3e, 0.35); // Higher ambient for visibility
+            // Morning lighting - Ultra bright and beautiful
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Bright morning ambient
             scene.add(ambientLight);
 
-            // Main moonlight - enough to see
-            const moonLight = new THREE.DirectionalLight(0xffffff, 1.0); // Bright moonlight
-            moonLight.position.set(50, 100, 50);
-            moonLight.castShadow = true;
-            moonLight.shadow.camera.left = -150;
-            moonLight.shadow.camera.right = 150;
-            moonLight.shadow.camera.top = 150;
-            moonLight.shadow.camera.bottom = -150;
-            moonLight.shadow.mapSize.width = 2048;
-            moonLight.shadow.mapSize.height = 2048;
-            moonLight.shadow.bias = -0.0001;
-            moonLight.shadow.normalBias = 0.02;
-            scene.add(moonLight);
+            // Main sunlight - Ultra bright morning sun
+            const sunLight = new THREE.DirectionalLight(0xffffee, 2.0); // Warm morning sunlight
+            sunLight.position.set(50, 200, 50); // High in sky
+            sunLight.castShadow = true; // Ultra shadows enabled
+            sunLight.shadow.camera.left = -200;
+            sunLight.shadow.camera.right = 200;
+            sunLight.shadow.camera.top = 200;
+            sunLight.shadow.camera.bottom = -200;
+            sunLight.shadow.mapSize.width = 4096; // Ultra high quality shadows
+            sunLight.shadow.mapSize.height = 4096;
+            sunLight.shadow.bias = -0.0001;
+            sunLight.shadow.normalBias = 0.02;
+            sunLight.shadow.radius = 8; // Soft shadows
+            sunLight.shadow.blurSamples = 25; // Ultra smooth shadows
+            scene.add(sunLight);
 
-            // Enhanced moon with glow - more visible
-            const moonGeometry = new THREE.SphereGeometry(15, 64, 64);
-            const moonTexture = createMoonTexture();
-            const moonMaterial = new THREE.MeshStandardMaterial({ 
-                map: moonTexture,
-                emissive: 0xffffff,
-                emissiveIntensity: 1.2, // Brighter moon
-                metalness: 0.1,
-                roughness: 0.9
+            // Additional fill light for depth
+            const fillLight = new THREE.DirectionalLight(0xffeedd, 0.5);
+            fillLight.position.set(-50, 100, -50);
+            scene.add(fillLight);
+
+            // Rim light for dramatic effect
+            const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            rimLight.position.set(0, 50, -100);
+            scene.add(rimLight);
+
+            // Beautiful Morning Sun
+            const sunGeometry = new THREE.SphereGeometry(20, 64, 64);
+            const sunMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffffaa,
+                emissive: 0xffff88,
+                emissiveIntensity: 1.5
             });
-            const moon = new THREE.Mesh(moonGeometry, moonMaterial);
-            moon.position.set(50, 100, 50);
-            scene.add(moon);
+            const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            sun.position.set(50, 150, 50);
+            scene.add(sun);
 
-            // Moon glow effect - more visible
-            const moonGlowGeometry = new THREE.SphereGeometry(20, 32, 32);
-            const moonGlowMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0xffffff,
+            // Sun glow effect
+            const sunGlowGeometry = new THREE.SphereGeometry(25, 32, 32);
+            const sunGlowMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffffaa,
                 transparent: true,
-                opacity: 0.4 // More visible glow
+                opacity: 0.6
             });
-            const moonGlow = new THREE.Mesh(moonGlowGeometry, moonGlowMaterial);
-            moonGlow.position.copy(moon.position);
-            scene.add(moonGlow);
+            const sunGlow = new THREE.Mesh(sunGlowGeometry, sunGlowMaterial);
+            sunGlow.position.copy(sun.position);
+            scene.add(sunGlow);
+            
+            // Add clouds for atmosphere
+            createClouds();
 
-            // Enhanced stars with twinkling - more visible in dark
-            const starsGeometry = new THREE.BufferGeometry();
-            const starsMaterial = new THREE.PointsMaterial({ 
-                color: 0xffffff, 
-                size: 2.0, // Larger stars for visibility
-                sizeAttenuation: false, // Constant size
-                transparent: true,
-                opacity: 1.0 // Fully visible
-            });
-            const starsVertices = [];
-            const starsColors = [];
-            for (let i = 0; i < 10000; i++) {
-                const x = (Math.random() - 0.5) * 2000;
-                const y = Math.random() * 800 + 50;
-                const z = (Math.random() - 0.5) * 2000;
-                starsVertices.push(x, y, z);
-                
-                // Varying star brightness - some brighter for visibility
-                const brightness = 0.3 + Math.random() * 0.7;
-                starsColors.push(brightness, brightness, brightness);
-            }
-            starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
-            starsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starsColors, 3));
-            starsMaterial.vertexColors = true;
-            const stars = new THREE.Points(starsGeometry, starsMaterial);
-            scene.add(stars);
+            // Beautiful birds flying (morning atmosphere)
+            createBirds();
             
             // Particle system for atmosphere
             createParticleSystem();
 
-            // Dark ground - visible
+            // Beautiful morning ground with grass texture
             const groundGeometry = new THREE.PlaneGeometry(1000, 1000, 50, 50);
             groundGeometry.rotateX(-Math.PI / 2);
             
-            // Create procedural ground texture - dark but visible
-            const groundTexture = createGroundTexture();
+            // Create beautiful ground texture
+            const groundTexture = createMorningGroundTexture();
             const groundMaterial = new THREE.MeshStandardMaterial({ 
                 map: groundTexture,
-                color: 0x1a1a2e, // More visible ground
+                color: 0x8B7355, // Earth/grass color
                 metalness: 0.0,
-                roughness: 1.0
+                roughness: 0.9
             });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.position.y = 0;
@@ -434,6 +423,11 @@
                 // Animate particles
                 updateParticles();
                 
+                // Animate birds
+                if (window.animateBirds) {
+                    window.animateBirds();
+                }
+                
                 // Update time
                 time += 0.016;
                 
@@ -510,23 +504,78 @@
             return texture;
         }
 
-        function createGroundTexture() {
+        function createMorningGroundTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 512;
             canvas.height = 512;
             const ctx = canvas.getContext('2d');
             
+            // Beautiful grass/earth gradient for morning
             const gradient = ctx.createLinearGradient(0, 0, 512, 512);
-            gradient.addColorStop(0, '#1a1a2e');
-            gradient.addColorStop(0.5, '#0a0a1a');
-            gradient.addColorStop(1, '#2a2a3e');
+            gradient.addColorStop(0, '#9b8658');
+            gradient.addColorStop(0.3, '#8B7355');
+            gradient.addColorStop(0.7, '#7a6348');
+            gradient.addColorStop(1, '#6b563d');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 512, 512);
             
-            // Add subtle noise
+            // Add grass texture pattern
+            ctx.fillStyle = '#6b8e23';
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * 512;
+                const y = Math.random() * 512;
+                ctx.fillRect(x, y, 2, 8);
+            }
+            
+            // Add subtle noise for realism
             const imageData = ctx.getImageData(0, 0, 512, 512);
             for (let i = 0; i < imageData.data.length; i += 4) {
-                const noise = (Math.random() - 0.5) * 15;
+                const noise = (Math.random() - 0.5) * 20;
+                imageData.data[i] = Math.max(0, Math.min(255, imageData.data[i] + noise));
+                imageData.data[i + 1] = Math.max(0, Math.min(255, imageData.data[i + 1] + noise * 0.8));
+                imageData.data[i + 2] = Math.max(0, Math.min(255, imageData.data[i + 2] + noise * 0.6));
+            }
+            ctx.putImageData(imageData, 0, 0);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(10, 10);
+            return texture;
+        }
+
+        function createMorningWallTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Beautiful stone/brick texture for morning
+            const gradient = ctx.createLinearGradient(0, 0, 256, 256);
+            gradient.addColorStop(0, '#9b8658');
+            gradient.addColorStop(0.5, '#8B7355');
+            gradient.addColorStop(1, '#7a6348');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 256, 256);
+            
+            // Add brick/stone pattern
+            ctx.strokeStyle = '#6b563d';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * 25.6, 0);
+                ctx.lineTo(i * 25.6, 256);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * 25.6);
+                ctx.lineTo(256, i * 25.6);
+                ctx.stroke();
+            }
+            
+            // Add texture noise
+            const imageData = ctx.getImageData(0, 0, 256, 256);
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                const noise = (Math.random() - 0.5) * 25;
                 imageData.data[i] = Math.max(0, Math.min(255, imageData.data[i] + noise));
                 imageData.data[i + 1] = Math.max(0, Math.min(255, imageData.data[i + 1] + noise));
                 imageData.data[i + 2] = Math.max(0, Math.min(255, imageData.data[i + 2] + noise));
@@ -536,8 +585,64 @@
             const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(10, 10);
+            texture.repeat.set(4, 4);
             return texture;
+        }
+
+        function createClouds() {
+            const cloudGeometry = new THREE.SphereGeometry(15, 32, 32);
+            const cloudMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.8,
+                roughness: 1.0,
+                metalness: 0.0
+            });
+            
+            // Create multiple clouds
+            for (let i = 0; i < 15; i++) {
+                const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+                cloud.position.set(
+                    (Math.random() - 0.5) * 400,
+                    80 + Math.random() * 40,
+                    (Math.random() - 0.5) * 400
+                );
+                cloud.scale.set(
+                    1 + Math.random() * 2,
+                    0.5 + Math.random() * 0.5,
+                    1 + Math.random() * 2
+                );
+                cloud.castShadow = false;
+                cloud.receiveShadow = false;
+                scene.add(cloud);
+            }
+        }
+
+        function createBirds() {
+            const birdGeometry = new THREE.BoxGeometry(0.2, 0.1, 0.3);
+            const birdMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+            
+            for (let i = 0; i < 5; i++) {
+                const bird = new THREE.Mesh(birdGeometry, birdMaterial);
+                bird.position.set(
+                    (Math.random() - 0.5) * 200,
+                    60 + Math.random() * 30,
+                    (Math.random() - 0.5) * 200
+                );
+                bird.userData.speed = 0.5 + Math.random() * 0.5;
+                bird.userData.offset = Math.random() * Math.PI * 2;
+                scene.add(bird);
+            }
+            
+            // Animate birds in update loop
+            window.animateBirds = function() {
+                scene.children.forEach(child => {
+                    if (child.material && child.material.color && child.material.color.r === 0.2) {
+                        child.position.x += Math.sin(time + child.userData.offset) * child.userData.speed * 0.01;
+                        child.position.z += Math.cos(time + child.userData.offset) * child.userData.speed * 0.01;
+                    }
+                });
+            };
         }
 
         function createParticleSystem() {
@@ -670,14 +775,14 @@
             maze[1][0] = 0;
             maze[mazeSize - 2][mazeSize - 1] = 0;
 
-            // Build 3D walls - dark but clearly visible
-            const wallTexture = createWallTexture();
+            // Build 3D walls - Ultra graphics with beautiful textures
+            const wallTexture = createMorningWallTexture();
             const wallMaterial = new THREE.MeshStandardMaterial({ 
                 map: wallTexture,
-                color: 0x2a2a3e, // More visible walls
-                metalness: 0.2,
-                roughness: 0.8,
-                normalScale: new THREE.Vector2(1, 1)
+                color: 0x8B7355, // Stone/brick color for morning
+                metalness: 0.3,
+                roughness: 0.7,
+                normalScale: new THREE.Vector2(2, 2)
             });
 
             for (let z = 0; z < mazeSize; z++) {
@@ -693,17 +798,7 @@
                         wall.castShadow = true;
                         wall.receiveShadow = true;
                         
-                        // Add subtle emissive glow to walls
-                        const wallGlow = new THREE.Mesh(
-                            new THREE.BoxGeometry(cellSize + 0.1, 5.5 + 0.1, cellSize + 0.1),
-                            new THREE.MeshBasicMaterial({ 
-                                color: 0x1a1a2e,
-                                transparent: true,
-                                opacity: 0.1
-                            })
-                        );
-                        wallGlow.position.copy(wall.position);
-                        scene.add(wallGlow);
+                        // No glow needed in morning - natural lighting
                         
                         scene.add(wall);
                     }
