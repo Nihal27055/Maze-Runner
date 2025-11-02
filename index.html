@@ -162,10 +162,10 @@
 
         // Initialize game
         function init() {
-            // Scene setup - Fully dark night
+            // Scene setup - Dark night with some visibility
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x000000); // Pure black background
-            scene.fog = new THREE.FogExp2(0x000000, 0.08); // Subtle black fog
+            scene.background = new THREE.Color(0x000010); // Very dark blue background
+            scene.fog = new THREE.FogExp2(0x000010, 0.03); // Very subtle fog
 
             // Camera setup
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -183,7 +183,7 @@
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 0.6; // Lower exposure for darker scene
+            renderer.toneMappingExposure = 1.0; // Balanced exposure
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             document.getElementById('gameContainer').appendChild(renderer.domElement);
 
@@ -208,8 +208,8 @@
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.target.copy(player.position);
-            controls.maxPolarAngle = Math.PI / 2; // Prevent going below ground
-            controls.minPolarAngle = Math.PI / 2; // Lock to horizontal view
+            controls.maxPolarAngle = Math.PI / 2.1; // Slight angle allowed
+            controls.minPolarAngle = -Math.PI / 3; // Can look up and down
             controls.enableZoom = false; // Disable zoom for first-person
             controls.enablePan = false; // Disable pan for first-person
             controls.mouseButtons = {
@@ -218,12 +218,12 @@
                 RIGHT: null
             };
 
-            // Minimal night lighting - very dark with subtle moonlight only
-            const ambientLight = new THREE.AmbientLight(0x000000, 0.1); // Almost no ambient
+            // Night lighting - dark but visible
+            const ambientLight = new THREE.AmbientLight(0x1a1a2e, 0.2); // Low ambient for visibility
             scene.add(ambientLight);
 
-            // Main moonlight - very subtle
-            const moonLight = new THREE.DirectionalLight(0xffffff, 0.4); // Reduced intensity
+            // Main moonlight - enough to see
+            const moonLight = new THREE.DirectionalLight(0xffffff, 0.8); // Visible moonlight
             moonLight.position.set(50, 100, 50);
             moonLight.castShadow = true;
             moonLight.shadow.camera.left = -150;
@@ -291,15 +291,15 @@
             // Particle system for atmosphere
             createParticleSystem();
 
-            // Dark ground
+            // Dark ground - visible
             const groundGeometry = new THREE.PlaneGeometry(1000, 1000, 50, 50);
             groundGeometry.rotateX(-Math.PI / 2);
             
-            // Create procedural ground texture - very dark
+            // Create procedural ground texture - dark but visible
             const groundTexture = createGroundTexture();
             const groundMaterial = new THREE.MeshStandardMaterial({ 
                 map: groundTexture,
-                color: 0x050510, // Very dark ground
+                color: 0x0a0a1a, // Dark but visible ground
                 metalness: 0.0,
                 roughness: 1.0
             });
@@ -406,9 +406,12 @@
                 camera.position.y = player.position.y + 1.6; // Eye level
                 camera.position.z = player.position.z;
                 
-                // Update controls - first person view rotates camera
-                controls.target.copy(camera.position);
-                controls.target.add(new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion));
+                // Update controls - first person view
+                controls.target.set(
+                    player.position.x,
+                    player.position.y + 1.6,
+                    player.position.z
+                );
                 controls.update();
                 
                 // Check food collection
@@ -467,11 +470,11 @@
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
             
-            // Create very dark stone-like texture
+            // Create dark stone-like texture - visible
             const gradient = ctx.createLinearGradient(0, 0, 256, 256);
-            gradient.addColorStop(0, '#0a0a15');
-            gradient.addColorStop(0.5, '#050510');
-            gradient.addColorStop(1, '#0f0f1a');
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(0.5, '#0f0f1f');
+            gradient.addColorStop(1, '#25253f');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 256, 256);
             
@@ -499,9 +502,9 @@
             const ctx = canvas.getContext('2d');
             
             const gradient = ctx.createLinearGradient(0, 0, 512, 512);
-            gradient.addColorStop(0, '#050510');
-            gradient.addColorStop(0.5, '#000005');
-            gradient.addColorStop(1, '#0a0a10');
+            gradient.addColorStop(0, '#0a0a1a');
+            gradient.addColorStop(0.5, '#050510');
+            gradient.addColorStop(1, '#0f0f1f');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, 512, 512);
             
@@ -652,11 +655,11 @@
             maze[1][0] = 0;
             maze[mazeSize - 2][mazeSize - 1] = 0;
 
-            // Build 3D walls - very dark
+            // Build 3D walls - dark but visible
             const wallTexture = createWallTexture();
             const wallMaterial = new THREE.MeshStandardMaterial({ 
                 map: wallTexture,
-                color: 0x0a0a15, // Much darker walls
+                color: 0x1a1a2e, // Dark but visible walls
                 metalness: 0.2,
                 roughness: 0.8,
                 normalScale: new THREE.Vector2(1, 1)
