@@ -187,27 +187,32 @@
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             document.getElementById('gameContainer').appendChild(renderer.domElement);
 
-            // Post-processing effects
-            composer = new EffectComposer(renderer);
-            const renderPass = new RenderPass(scene, camera);
-            composer.addPass(renderPass);
-            
-            const bloomPass = new UnrealBloomPass(
-                new THREE.Vector2(window.innerWidth, window.innerHeight),
-                0.8, // Reduced strength for subtlety
-                0.3, // radius
-                0.9 // threshold - only very bright things bloom
-            );
-            composer.addPass(bloomPass);
-            
-            const outputPass = new OutputPass();
-            composer.addPass(outputPass);
+            // Post-processing effects (commented out initially to debug)
+            try {
+                composer = new EffectComposer(renderer);
+                const renderPass = new RenderPass(scene, camera);
+                composer.addPass(renderPass);
+                
+                const bloomPass = new UnrealBloomPass(
+                    new THREE.Vector2(window.innerWidth, window.innerHeight),
+                    0.8, // Reduced strength for subtlety
+                    0.3, // radius
+                    0.9 // threshold - only very bright things bloom
+                );
+                composer.addPass(bloomPass);
+                
+                const outputPass = new OutputPass();
+                composer.addPass(outputPass);
+            } catch (error) {
+                console.warn('Post-processing not available, using basic renderer:', error);
+                composer = null;
+            }
 
             // First-person camera controls
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
-            controls.target.copy(player.position);
+            controls.target.set(0, 1.6, -1); // Initial target (look forward)
             controls.maxPolarAngle = Math.PI / 2.1; // Slight angle allowed
             controls.minPolarAngle = -Math.PI / 3; // Can look up and down
             controls.enableZoom = false; // Disable zoom for first-person
@@ -217,6 +222,7 @@
                 MIDDLE: null,
                 RIGHT: null
             };
+            controls.update(); // Update immediately
 
             // Night lighting - dark but visible
             const ambientLight = new THREE.AmbientLight(0x2a2a3e, 0.35); // Higher ambient for visibility
@@ -324,6 +330,13 @@
             // Generate random maze
             generateMaze();
             placeFood();
+            
+            // Force initial render to ensure visibility
+            if (composer) {
+                composer.render();
+            } else {
+                renderer.render(scene, camera);
+            }
 
             // Window resize
             window.addEventListener('resize', onWindowResize);
@@ -424,8 +437,12 @@
                 // Update time
                 time += 0.016;
                 
-                // Use composer for post-processing
-                composer.render();
+                // Use composer for post-processing or basic renderer
+                if (composer) {
+                    composer.render();
+                } else {
+                    renderer.render(scene, camera);
+                }
             }
             
             animate();
